@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"sort"
 	"strconv"
 	"strings"
 
@@ -142,6 +143,11 @@ func login(cmd *cobra.Command, args []string) error {
 	} else {
 		newItemList = items
 	}
+
+	// Sort the items for consistency
+	sort.SliceStable(newItemList, func(i, j int) bool {
+		return newItemList[i].Overview.Title < newItemList[j].Overview.Title
+	})
 
 	var title string
 	if len(newItemList) > 1 {
