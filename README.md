@@ -25,7 +25,7 @@ to the user's desire. As an example:
 ## Example Usage
 
 ```sh
-go run github.com/deptofdefense/awslogin
+go run github.com/deptofdefense/awslogin/cmd/awslogin
 ```
 
 Follow the prompts which will look like:
@@ -46,7 +46,7 @@ Then your browser should open and log you into the AWS Console.
 It is also possible to have a faster experience by filtering. If you know the alias in advance use this syntax:
 
 ```sh
-go run github.com/deptofdefense/awslogin alias-example
+go run github.com/deptofdefense/awslogin/cmd/awslogin alias-example
 ```
 
 Follow the prompts which will look like:
@@ -61,7 +61,7 @@ The difference here is being directly logged in with no prompts. Multiple filter
 The browser to use can also be changed if desired:
 
 ```sh
-go run github.com/deptofdefense/awslogin alias-example --browser firefox
+go run github.com/deptofdefense/awslogin/cmd/awslogin alias-example --browser firefox
 ```
 
 ### AWS Profile Env Var
