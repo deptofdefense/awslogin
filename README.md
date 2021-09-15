@@ -63,3 +63,9 @@ The browser to use can also be changed if desired:
 ```sh
 go run github.com/deptofdefense/awslogin alias-example --browser firefox
 ```
+
+### AWS Profile Env Var
+
+In the case where you are using a system to manage environment variables (like [direnv](https://direnv.net)) you may
+want the program to automatically sign you in to whatever the environment variable for `AWS_PROFILE` is set to. This
+program will automatically add the value of `AWS_PROFILE` to your set of filters to use when logging in.

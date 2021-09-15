@@ -94,6 +94,12 @@ func login(cmd *cobra.Command, args []string) error {
 		filters = args
 	}
 
+	// If the AWS_PROFILE is set then filter on it
+	awsProfile := os.Getenv("AWS_PROFILE")
+	if len(awsProfile) > 0 {
+		filters = append(filters, awsProfile)
+	}
+
 	browser := v.GetString(flagLoginBrowser)
 	browserPath := browserToPath[browser]
 	sectionName := v.GetString(flagLoginSectionName)
