@@ -17,8 +17,10 @@ op signin defense-digital-service.1password.com first.last@dds.mil --shorthand d
 ```
 
 For this to work you must have at least one `login` category entry in your 1Password vault. It needs a `one-time password` section as well
-as a custom section named `ACCOUNT_INFO`. Additionally, one of the items in the section needs to be `Account Alias`. These can be configured
-to the user's desire.
+as a custom section named `ACCOUNT_INFO`. Additionally, one of the items in the section needs to be `ACCOUNT_ALIAS`. These can be configured
+to the user's desire. As an example:
+
+![1Password Login Example](./images/1password_login.png)
 
 ## Example Usage
 
