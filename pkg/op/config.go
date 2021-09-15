@@ -5,13 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"time"
 )
 
 type Config struct {
 	SessionName  string `json:"session_name"`
 	SessionToken string `json:"session_token"`
-	Expiration   int64  `json:"expiration"`
 }
 
 func New(sessionName, sessionToken string) *Config {
@@ -19,19 +17,12 @@ func New(sessionName, sessionToken string) *Config {
 		SessionName:  sessionName,
 		SessionToken: sessionToken,
 	}
-	config.ResetExpiration()
 	return config
-}
-
-// TODO: Remove
-func (config *Config) ResetExpiration() {
-	config.Expiration = time.Now().AddDate(0, 0, 30).Unix()
 }
 
 func (config *Config) GetEnvVars() []string {
 	envVars := []string{
 		fmt.Sprintf("%s=%s", config.SessionName, config.SessionToken),
-		fmt.Sprintf("OP_EXPIRATION=%d", config.Expiration),
 	}
 	return envVars
 }
