@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	"github.com/deptofdefense/awslogin/pkg/op"
+	"github.com/deptofdefense/awslogin/pkg/version"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -25,6 +26,7 @@ const (
 	flagLoginBrowser     = "browser"
 	flagLoginSectionName = "section-name"
 	flagLoginFieldTitle  = "field-title"
+	flagLoginVersion     = "version"
 
 	flagSessionDirectory = "session-directory"
 	flagSessionFilename  = "session-filename"
@@ -60,6 +62,7 @@ func initLoginFlags(flag *pflag.FlagSet) {
 	flag.String(flagLoginFieldTitle, "ACCOUNT_ALIAS", "The 1Password field title used to identify AWS Account Alias")
 	flag.String(flagSessionDirectory, HOMEDIR, "The path of the directory to hold the session information")
 	flag.String(flagSessionFilename, SESSION_FILE, "The name of the file to retain session information")
+	flag.Bool(flagLoginVersion, false, "Display the version information and exit")
 }
 
 func checkLoginConfig(v *viper.Viper) error {
@@ -119,6 +122,11 @@ func login(cmd *cobra.Command, args []string) error {
 	v, errViper := initViper(cmd)
 	if errViper != nil {
 		return fmt.Errorf("error initializing viper: %w\n", errViper)
+	}
+
+	if v.GetBool(flagLoginVersion) {
+		fmt.Println(version.Full())
+		return nil
 	}
 
 	if errConfig := checkLoginConfig(v); errConfig != nil {
