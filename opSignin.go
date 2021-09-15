@@ -14,9 +14,14 @@ import (
 )
 
 func initOPSigninFlags(flag *pflag.FlagSet) {
+	initSessionFlags(flag)
 }
 
 func checkOPSigninConfig(v *viper.Viper) error {
+	errCheckSessionConfig := checkSessionConfig(v)
+	if errCheckSessionConfig != nil {
+		return errCheckSessionConfig
+	}
 	return nil
 }
 
@@ -30,19 +35,19 @@ func opSignin(cmd *cobra.Command, args []string) error {
 		return errConfig
 	}
 
-	homedir, err := os.UserHomeDir()
-	if err != nil {
-		log.Fatal(err)
-	}
-	sessionFilename := path.Join(homedir, ".op_session")
+	sessionDirectory := v.GetString(flagSessionDirectory)
+	sessionFilename := v.GetString(flagSessionFilename)
 
-	config, err := op.Signin(sessionFilename)
-	if err != nil {
-		return err
+	if sessionDirectory == HOMEDIR {
+		homedir, errUserHomeDir := os.UserHomeDir()
+		if errUserHomeDir != nil {
+			log.Fatal(errUserHomeDir)
+		}
+		sessionDirectory = homedir
 	}
+	sessionPath := path.Join(sessionDirectory, sessionFilename)
 
-	// Verify that the session token works by getting account info
-	_, err = config.GetAccount()
+	_, err := op.CheckSession(sessionPath)
 	if err != nil {
 		return err
 	}

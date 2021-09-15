@@ -44,14 +44,17 @@ var (
 
 func initLoginFlags(flag *pflag.FlagSet) {
 	flag.String(flagLoginBrowser, browserFirefox, "The browser to open with")
-	flag.String(flagSessionDirectory, HOMEDIR, "The path of the directory to hold the session information")
-	flag.String(flagSessionFilename, ".op_session", "The name of the file to retain session information")
+	initSessionFlags(flag)
 }
 
 func checkLoginConfig(v *viper.Viper) error {
 	browser := v.GetString(flagLoginBrowser)
 	if _, ok := browserToPath[browser]; !ok {
 		return fmt.Errorf("Given browser %q is not an option", browser)
+	}
+	errCheckSessionConfig := checkSessionConfig(v)
+	if errCheckSessionConfig != nil {
+		return errCheckSessionConfig
 	}
 	return nil
 }

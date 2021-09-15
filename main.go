@@ -1,17 +1,20 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"strings"
 
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 )
 
 const (
-	CLI_NAME = "awslogin"
-	HOMEDIR  = "~/"
+	CLI_NAME     = "awslogin"
+	HOMEDIR      = "~/"
+	SESSION_FILE = ".op_session"
 
 	flagSessionDirectory = "session-directory"
 	flagSessionFilename  = "session-filename"
@@ -26,6 +29,30 @@ func initViper(cmd *cobra.Command) (*viper.Viper, error) {
 	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	v.AutomaticEnv() // set environment variables to overwrite config
 	return v, nil
+}
+
+func initSessionFlags(flag *pflag.FlagSet) {
+	flag.String(flagSessionDirectory, HOMEDIR, "The path of the directory to hold the session information")
+	flag.String(flagSessionFilename, SESSION_FILE, "The name of the file to retain session information")
+}
+
+func checkSessionConfig(v *viper.Viper) error {
+	sessionDirectory := v.GetString(flagSessionDirectory)
+	if sessionDirectory == HOMEDIR {
+		homedir, errUserHomeDir := os.UserHomeDir()
+		if errUserHomeDir != nil {
+			return errUserHomeDir
+		}
+		sessionDirectory = homedir
+	}
+	if _, err := os.Stat(sessionDirectory); os.IsNotExist(err) {
+		return fmt.Errorf("The session directory %q does not exist", sessionDirectory)
+	}
+	sessionFilename := v.GetString(flagSessionFilename)
+	if len(sessionFilename) == 0 {
+		return errors.New("The session filename should not be empty")
+	}
+	return nil
 }
 
 func main() {
