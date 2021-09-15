@@ -28,13 +28,6 @@ func (config *Config) GetEnvVars() []string {
 }
 
 func CheckSession(sessionFilename string) (*Config, error) {
-	if _, err := os.Stat(sessionFilename); os.IsNotExist(err) {
-		_, errCreate := os.Create(sessionFilename)
-		if errCreate != nil {
-			return nil, fmt.Errorf("Unable to create a session file at %q", sessionFilename)
-		}
-	}
-
 	config, err := LoadConfig(sessionFilename)
 	if err != nil {
 		return nil, err
@@ -57,7 +50,10 @@ func CheckSession(sessionFilename string) (*Config, error) {
 }
 
 func LoadConfig(filename string) (*Config, error) {
-	f, err := os.Open(filename)
+	f, err := os.OpenFile(filename, os.O_RDONLY|os.O_CREATE, 0644)
+	defer func() {
+		_ = f.Close()
+	}()
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +75,7 @@ func LoadConfig(filename string) (*Config, error) {
 }
 
 func WriteConfig(filename string, config *Config) error {
-	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
+	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
 	defer func() {
 		_ = f.Close()
 	}()
