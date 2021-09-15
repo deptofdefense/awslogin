@@ -22,6 +22,20 @@ to the user's desire. As an example:
 
 ![1Password Login Example](./images/1password_login.png)
 
+## Build the package
+
+To build the package and use it you can run
+
+```sh
+make bin/awslogin
+```
+
+The binary can be used directly from that location or copied to a location on your `$PATH`:
+
+```sh
+cp bin/awslogin /usr/local/bin/
+```
+
 ## Example Usage
 
 ```sh
