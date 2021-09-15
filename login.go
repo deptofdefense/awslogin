@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -21,6 +22,9 @@ const (
 	flagLoginBrowser     = "browser"
 	flagLoginSectionName = "section-name"
 	flagLoginFieldTitle  = "field-title"
+
+	flagSessionDirectory = "session-directory"
+	flagSessionFilename  = "session-filename"
 
 	browserChrome          = "chrome"
 	browserChromeIncognito = "chrome-incognito"
@@ -48,7 +52,8 @@ func initLoginFlags(flag *pflag.FlagSet) {
 	flag.String(flagLoginBrowser, browserChrome, "The browser to open with")
 	flag.String(flagLoginSectionName, "ACCOUNT_INFO", "The 1Password section name used to identify AWS credentials")
 	flag.String(flagLoginFieldTitle, "ACCOUNT_ALIAS", "The 1Password field title used to identify AWS Account Alias")
-	initSessionFlags(flag)
+	flag.String(flagSessionDirectory, HOMEDIR, "The path of the directory to hold the session information")
+	flag.String(flagSessionFilename, SESSION_FILE, "The name of the file to retain session information")
 }
 
 func checkLoginConfig(v *viper.Viper) error {
@@ -56,9 +61,20 @@ func checkLoginConfig(v *viper.Viper) error {
 	if _, ok := browserToPath[browser]; !ok {
 		return fmt.Errorf("Given browser %q is not an option\n", browser)
 	}
-	errCheckSessionConfig := checkSessionConfig(v)
-	if errCheckSessionConfig != nil {
-		return errCheckSessionConfig
+	sessionDirectory := v.GetString(flagSessionDirectory)
+	if sessionDirectory == HOMEDIR {
+		homedir, errUserHomeDir := os.UserHomeDir()
+		if errUserHomeDir != nil {
+			return errUserHomeDir
+		}
+		sessionDirectory = homedir
+	}
+	if _, err := os.Stat(sessionDirectory); os.IsNotExist(err) {
+		return fmt.Errorf("The session directory %q does not exist\n", sessionDirectory)
+	}
+	sessionFilename := v.GetString(flagSessionFilename)
+	if len(sessionFilename) == 0 {
+		return errors.New("The session filename should not be empty")
 	}
 	return nil
 }

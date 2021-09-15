@@ -24,30 +24,20 @@ to the user's desire. As an example:
 
 ## Example Usage
 
-### Sign In to 1Password
-
 ```sh
-go run github.com/deptofdefense/awslogin op-signin
-```
-
-This creates a json file in `~/.op_session` with the details for your 1Password session. This session expires after 30 minutes.
-
-### Log Into AWS
-
-```sh
-go run github.com/deptofdefense/awslogin login
+go run github.com/deptofdefense/awslogin
 ```
 
 Follow the prompts which will look like:
 
 ```text
-0 AWS alias1
-1 AWS alias2
+0 AWS alias-example
+1 AWS alias-example2
 
 Choose a secret's number: 1
 
-You chose: AWS alias2
-Account Alias: alias2
+You chose: AWS alias-example2
+Account Alias: alias-example2
 MFA Token: 764417
 ```
 
@@ -56,13 +46,13 @@ Then your browser should open and log you into the AWS Console.
 It is also possible to have a faster experience by filtering. If you know the alias in advance use this syntax:
 
 ```sh
-go run github.com/deptofdefense/awslogin login known-alias
+go run github.com/deptofdefense/awslogin alias-example
 ```
 
 Follow the prompts which will look like:
 
 ```text
-Account Alias: known-alias
+Account Alias: alias-example
 MFA Token: 764418
 ```
 
@@ -71,5 +61,5 @@ The difference here is being directly logged in with no prompts. Multiple filter
 The browser to use can also be changed if desired:
 
 ```sh
-go run github.com/deptofdefense/awslogin login known-alias --browser chrome
+go run github.com/deptofdefense/awslogin alias-example --browser firefox
 ```
