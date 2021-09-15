@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -17,6 +18,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
+	"golang.org/x/mod/semver"
 )
 
 const (
@@ -32,6 +34,9 @@ const (
 	browserChromeCanary    = "chrome-canary"
 	browserSafari          = "safari"
 	browserFirefox         = "firefox"
+
+	minVersionOP       = "1.11.4"
+	minVersionAWSVault = "v6.3.1"
 )
 
 var (
@@ -80,6 +85,36 @@ func checkLoginConfig(v *viper.Viper) error {
 	return nil
 }
 
+// preCheck will return an error if prerequisites are not met
+func preCheck(commandName string, commandArgs []string, expected string) error {
+
+	commandPath, errEvalSymlinks := filepath.EvalSymlinks(commandName)
+	if errEvalSymlinks != nil {
+		return errEvalSymlinks
+	}
+	versionCommand := exec.Command(commandPath, commandArgs...)
+	actual, errOutput := versionCommand.CombinedOutput()
+	if errOutput != nil {
+		return fmt.Errorf("Unable to call version command for %q with args %v: %w", commandName, commandArgs, errOutput)
+	}
+	actualStr := strings.TrimSpace(string(actual))
+	if len(actualStr) == 0 {
+		return fmt.Errorf("No output returned for version command for %q with args %v", commandName, commandArgs)
+	}
+	// Prefix with 'v' for comparison sake
+	if actualStr[0] != 'v' {
+		actualStr = "v" + actualStr
+	}
+	if expected[0] != 'v' {
+		expected = "v" + expected
+	}
+	// Here we will be using semver.Compare(Actual, Expected)
+	if semver.Compare(actualStr, expected) < 0 {
+		return fmt.Errorf("Expected version of %q to be greater or equal to %q", commandName, expected)
+	}
+	return nil
+}
+
 func login(cmd *cobra.Command, args []string) error {
 	v, errViper := initViper(cmd)
 	if errViper != nil {
@@ -88,6 +123,16 @@ func login(cmd *cobra.Command, args []string) error {
 
 	if errConfig := checkLoginConfig(v); errConfig != nil {
 		return errConfig
+	}
+
+	// Confirm that the minimum version is met for these tools
+	errPreCheck := preCheck("/usr/local/bin/op", []string{"--version"}, minVersionOP)
+	if errPreCheck != nil {
+		return errPreCheck
+	}
+	errPreCheck = preCheck("/usr/local/bin/aws-vault", []string{"--version"}, minVersionAWSVault)
+	if errPreCheck != nil {
+		return errPreCheck
 	}
 
 	var filters []string
