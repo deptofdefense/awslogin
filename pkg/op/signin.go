@@ -12,32 +12,35 @@ import (
 
 func Signin(sessionFilename string) (*Config, error) {
 
-	opPath, err := GetExecPath()
-	if err != nil {
-		return nil, err
+	opPath, errGetExecPath := GetExecPath()
+	if errGetExecPath != nil {
+		return nil, errGetExecPath
 	}
 
 	fmt.Println("Enter your 1Password password:")
-	bytePassword, err := terminal.ReadPassword(0)
-	if err != nil {
-		log.Fatal(err)
+	bytePassword, errReadPassword := terminal.ReadPassword(0)
+	if errReadPassword != nil {
+		log.Fatal(errReadPassword)
 	}
 	pass := strings.TrimSpace(string(bytePassword))
 
 	command := exec.Command(*opPath, "signin")
-	stdin, err := command.StdinPipe()
-	if err != nil {
-		log.Fatal(err)
+	stdin, errStdinPipe := command.StdinPipe()
+	if errStdinPipe != nil {
+		log.Fatal(errStdinPipe)
 	}
 
 	go func() {
 		defer stdin.Close()
-		io.WriteString(stdin, pass)
+		_, errWriteString := io.WriteString(stdin, pass)
+		if errWriteString != nil {
+			log.Fatal(errWriteString)
+		}
 	}()
 
-	out, err := command.Output()
-	if err != nil {
-		log.Fatal(err)
+	out, errOutput := command.Output()
+	if errOutput != nil {
+		log.Fatal(errOutput)
 	}
 	// The output appears to be:
 	// export OP_SESSION_dds="_N8UtA6Y-NGyiWycztN9PZbuDA0g-B7xXOkrIGD1E91"
@@ -46,7 +49,10 @@ func Signin(sessionFilename string) (*Config, error) {
 	sessionToken := strings.Trim(opSession[1], "\"")
 
 	config := New(sessionName, sessionToken)
-	WriteConfig(sessionFilename, config)
+	errWriteConfig := WriteConfig(sessionFilename, config)
+	if errWriteConfig != nil {
+		return nil, errWriteConfig
+	}
 
 	fmt.Printf("1Password session file saved to: %s\n", sessionFilename)
 	return config, nil

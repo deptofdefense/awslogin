@@ -71,8 +71,8 @@ func main() {
 	)
 
 	if err := rootCommand.Execute(); err != nil {
-		_, _ = fmt.Fprintln(os.Stderr, fmt.Sprintf("%s: %s", CLI_NAME, err.Error()))
-		_, _ = fmt.Fprintln(os.Stderr, fmt.Sprintf("Try %s --help for more information.", CLI_NAME))
+		_, _ = fmt.Fprintf(os.Stderr, "%s: %s", CLI_NAME, err.Error())
+		_, _ = fmt.Fprintf(os.Stderr, "Try %s --help for more information.", CLI_NAME)
 		os.Exit(1)
 	}
 }

@@ -77,23 +77,23 @@ func login(cmd *cobra.Command, args []string) error {
 	sessionFilename := v.GetString(flagSessionFilename)
 
 	if sessionDirectory == HOMEDIR {
-		homedir, err := os.UserHomeDir()
-		if err != nil {
-			log.Fatal(err)
+		homedir, errUserHomeDir := os.UserHomeDir()
+		if errUserHomeDir != nil {
+			log.Fatal(errUserHomeDir)
 		}
 		sessionDirectory = homedir
 	}
 	sessionPath := path.Join(sessionDirectory, sessionFilename)
 
-	config, err := op.CheckSession(sessionPath)
-	if err != nil {
-		return err
+	config, errCheckSession := op.CheckSession(sessionPath)
+	if errCheckSession != nil {
+		return errCheckSession
 	}
 
 	tags := "aws"
-	items, err := config.ListItems(tags)
-	if err != nil {
-		return err
+	items, errListItems := config.ListItems(tags)
+	if errListItems != nil {
+		return errListItems
 	}
 
 	// Filter the items first
@@ -119,13 +119,13 @@ func login(cmd *cobra.Command, args []string) error {
 
 		fmt.Printf("\nChoose a secret's number: ")
 		reader := bufio.NewReader(os.Stdin)
-		choice, err := reader.ReadString('\n')
-		if err != nil {
-			return err
+		choice, errReadString := reader.ReadString('\n')
+		if errReadString != nil {
+			return errReadString
 		}
-		numChoice, err := strconv.Atoi(strings.TrimSpace(choice))
-		if err != nil {
-			return err
+		numChoice, errAtoi := strconv.Atoi(strings.TrimSpace(choice))
+		if errAtoi != nil {
+			return errAtoi
 		}
 		title = newItemList[numChoice].Overview.Title
 		fmt.Printf("\nYou chose: %s\n\n", title)
@@ -135,9 +135,9 @@ func login(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("No entries were found using filters %v", filters)
 	}
 
-	item, err := config.GetItem(title)
-	if err != nil {
-		return err
+	item, errGetItem := config.GetItem(title)
+	if errGetItem != nil {
+		return errGetItem
 	}
 
 	var accountAlias string
@@ -157,9 +157,9 @@ func login(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("Account Alias: %s\n", accountAlias)
 
-	totp, err := config.GetTotp(title)
-	if err != nil {
-		return err
+	totp, errGetTotp := config.GetTotp(title)
+	if errGetTotp != nil {
+		return errGetTotp
 	}
 
 	oneTimePassword := strings.TrimSpace(*totp)
@@ -170,19 +170,25 @@ func login(cmd *cobra.Command, args []string) error {
 	command2 := exec.Command("xargs", append([]string{"-t"}, browserPath...)...)
 
 	// Set up the pipe
-	readPipe, writePipe, err := os.Pipe()
-	if err != nil {
-		return err
+	readPipe, writePipe, errPipe := os.Pipe()
+	if errPipe != nil {
+		return errPipe
 	}
 	command1.Stdout = writePipe
 	command2.Stdin = readPipe
 	command2.Stdout = os.Stdout
-	command1.Start()
-	command2.Start()
+	errStart1 := command1.Start()
+	if errStart1 != nil {
+		return errStart1
+	}
+	errStart2 := command2.Start()
+	if errStart2 != nil {
+		return errStart2
+	}
 
 	go func() {
 		defer writePipe.Close()
-		command1.Wait()
+		_ = command1.Wait()
 	}()
 	_ = command2.Run()
 

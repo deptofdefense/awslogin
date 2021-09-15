@@ -1,0 +1,57 @@
+linters-settings:
+  govet:
+    check-shadowing: true
+  gci:
+    # put imports beginning with prefix after 3rd-party packages;
+    # it's a comma-separated list of prefixes
+    local-prefixes: github.com/deptofdefense/awslogin
+  goimports:
+    # put imports beginning with prefix after 3rd-party packages;
+    # it's a comma-separated list of prefixes
+    local-prefixes: github.com/deptofdefense/awslogin,github.com/deptofdefense
+  golint:
+    # minimal confidence for issues, default is 0.8
+    min-confidence: 0.7
+
+  linters:
+    enable:
+      - deadcode
+      - errcheck
+      - gci
+      - gofmt
+      - goimports
+      - golint
+      - gosec
+      - govet
+      - ineffassign
+      - staticcheck
+      - structcheck
+      - typecheck
+      - varcheck
+    disable:
+      - gosimple #deprecated https://github.com/golangci/golangci-lint/issues/357
+      - unused #deprecated https://github.com/dominikh/go-tools/tree/master/cmd/unused
+    fast: false
+
+  issues:
+    # golangci-lint excludes by default some checks they consider "annoying"
+    # A better practice is for each repo to choose which ones to disable
+    exclude-use-default: false
+    fix: true
+
+    # Maximum issues count per one linter. Set to 0 to disable. Default is 50.
+    max-issues-per-linter: 0
+
+    # Maximum count of issues with the same text. Set to 0 to disable. Default is 3.
+    max-same-issues: 0
+
+    # Show only new issues: if there are unstaged changes or untracked files,
+    # only those changes are analyzed, else only changes in HEAD~ are analyzed.
+    # It's a super-useful option for integration of golangci-lint into existing
+    # large codebase. It's not practical to fix all existing issues at the moment
+    # of integration: much better don't allow issues in new code.
+    # Default is false.
+    new: false
+
+  run:
+    modules-download-mode: readonly

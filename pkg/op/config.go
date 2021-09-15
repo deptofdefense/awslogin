@@ -9,7 +9,6 @@ import (
 )
 
 type Config struct {
-	opPath       string
 	SessionName  string `json:"session_name"`
 	SessionToken string `json:"session_token"`
 	Expiration   int64  `json:"expiration"`
@@ -82,14 +81,19 @@ func LoadConfig(filename string) (*Config, error) {
 
 func WriteConfig(filename string, config *Config) error {
 	f, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0755)
-	defer f.Close()
+	defer func() {
+		_ = f.Close()
+	}()
 	if err != nil {
 		return err
 	}
-	data, err := json.Marshal(config)
-	_, err = f.Write(data)
-	if err != nil {
-		return err
+	data, errMarshal := json.Marshal(config)
+	if errMarshal != nil {
+		return errMarshal
+	}
+	_, errWrite := f.Write(data)
+	if errWrite != nil {
+		return errWrite
 	}
 	return nil
 }
