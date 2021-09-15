@@ -23,6 +23,7 @@ func New(sessionName, sessionToken string) *Config {
 	return config
 }
 
+// TODO: Remove
 func (config *Config) ResetExpiration() {
 	config.Expiration = time.Now().AddDate(0, 0, 30).Unix()
 }
@@ -37,7 +38,7 @@ func (config *Config) GetEnvVars() []string {
 
 func CheckSession(sessionFilename string) (*Config, error) {
 	if _, err := os.Stat(sessionFilename); os.IsNotExist(err) {
-		return nil, fmt.Errorf("The session filename does not exist at %s", sessionFilename)
+		return nil, fmt.Errorf("The session filename does not exist at %s\n", sessionFilename)
 	}
 
 	config, err := LoadConfig(sessionFilename)

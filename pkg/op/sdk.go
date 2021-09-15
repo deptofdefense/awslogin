@@ -16,10 +16,10 @@ type Item struct {
 }
 
 type Details struct {
-	Fields          []Field   `json:"fields,omitempty"`
-	NotesPlain      string    `json:"notesPlain,omitempty"`
-	PasswordHistory []string  `json:"passwordHistory,omitempty"`
-	Sections        []Section `json:",omitempty"`
+	Fields          []Field       `json:"fields,omitempty"`
+	NotesPlain      string        `json:"notesPlain,omitempty"`
+	PasswordHistory []interface{} `json:"passwordHistory,omitempty"`
+	Sections        []Section     `json:",omitempty"`
 }
 
 type Field struct {

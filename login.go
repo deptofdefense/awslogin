@@ -45,16 +45,16 @@ var (
 )
 
 func initLoginFlags(flag *pflag.FlagSet) {
-	flag.String(flagLoginBrowser, browserFirefox, "The browser to open with")
+	flag.String(flagLoginBrowser, browserChrome, "The browser to open with")
 	flag.String(flagLoginSectionName, "ACCOUNT_INFO", "The 1Password section name used to identify AWS credentials")
-	flag.String(flagLoginFieldTitle, "Account Alias", "The 1Password field title used to identify AWS Account Alias")
+	flag.String(flagLoginFieldTitle, "ACCOUNT_ALIAS", "The 1Password field title used to identify AWS Account Alias")
 	initSessionFlags(flag)
 }
 
 func checkLoginConfig(v *viper.Viper) error {
 	browser := v.GetString(flagLoginBrowser)
 	if _, ok := browserToPath[browser]; !ok {
-		return fmt.Errorf("Given browser %q is not an option", browser)
+		return fmt.Errorf("Given browser %q is not an option\n", browser)
 	}
 	errCheckSessionConfig := checkSessionConfig(v)
 	if errCheckSessionConfig != nil {
@@ -66,7 +66,7 @@ func checkLoginConfig(v *viper.Viper) error {
 func login(cmd *cobra.Command, args []string) error {
 	v, errViper := initViper(cmd)
 	if errViper != nil {
-		return fmt.Errorf("error initializing viper: %w", errViper)
+		return fmt.Errorf("error initializing viper: %w\n", errViper)
 	}
 
 	if errConfig := checkLoginConfig(v); errConfig != nil {
@@ -106,6 +106,7 @@ func login(cmd *cobra.Command, args []string) error {
 	}
 
 	// Filter the items first
+	// TODO: Sort by name of title
 	newItemList := []op.Item{}
 	if len(filters) > 0 {
 		for _, item := range items {
@@ -141,7 +142,7 @@ func login(cmd *cobra.Command, args []string) error {
 	} else if len(newItemList) == 1 {
 		title = newItemList[0].Overview.Title
 	} else {
-		return fmt.Errorf("No entries were found using filters %v", filters)
+		return fmt.Errorf("No entries were found using filters %v\n", filters)
 	}
 
 	item, errGetItem := config.GetItem(title)
@@ -161,7 +162,7 @@ func login(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(strings.TrimSpace(accountAlias)) == 0 {
-		return fmt.Errorf("There is no account alias defined for the choice %q", title)
+		return fmt.Errorf("There is no account alias defined for the choice %q\n", title)
 	}
 
 	fmt.Printf("Account Alias: %s\n", accountAlias)

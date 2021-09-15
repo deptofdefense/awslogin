@@ -24,7 +24,7 @@ func initViper(cmd *cobra.Command) (*viper.Viper, error) {
 	v := viper.New()
 	errBind := v.BindPFlags(cmd.Flags())
 	if errBind != nil {
-		return v, fmt.Errorf("error binding flag set to viper: %w", errBind)
+		return v, fmt.Errorf("error binding flag set to viper: %w\n", errBind)
 	}
 	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	v.AutomaticEnv() // set environment variables to overwrite config
@@ -46,7 +46,7 @@ func checkSessionConfig(v *viper.Viper) error {
 		sessionDirectory = homedir
 	}
 	if _, err := os.Stat(sessionDirectory); os.IsNotExist(err) {
-		return fmt.Errorf("The session directory %q does not exist", sessionDirectory)
+		return fmt.Errorf("The session directory %q does not exist\n", sessionDirectory)
 	}
 	sessionFilename := v.GetString(flagSessionFilename)
 	if len(sessionFilename) == 0 {

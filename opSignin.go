@@ -28,7 +28,7 @@ func checkOPSigninConfig(v *viper.Viper) error {
 func opSignin(cmd *cobra.Command, args []string) error {
 	v, errViper := initViper(cmd)
 	if errViper != nil {
-		return fmt.Errorf("error initializing viper: %w", errViper)
+		return fmt.Errorf("error initializing viper: %w\n", errViper)
 	}
 
 	if errConfig := checkOPSigninConfig(v); errConfig != nil {
