@@ -18,7 +18,9 @@ import (
 )
 
 const (
-	flagLoginBrowser = "browser"
+	flagLoginBrowser     = "browser"
+	flagLoginSectionName = "section-name"
+	flagLoginFieldTitle  = "field-title"
 
 	browserChrome          = "chrome"
 	browserChromeIncognito = "chrome-incognito"
@@ -44,6 +46,8 @@ var (
 
 func initLoginFlags(flag *pflag.FlagSet) {
 	flag.String(flagLoginBrowser, browserFirefox, "The browser to open with")
+	flag.String(flagLoginSectionName, "ACCOUNT_INFO", "The 1Password section name used to identify AWS credentials")
+	flag.String(flagLoginFieldTitle, "Account Alias", "The 1Password field title used to identify AWS Account Alias")
 	initSessionFlags(flag)
 }
 
@@ -76,6 +80,8 @@ func login(cmd *cobra.Command, args []string) error {
 
 	browser := v.GetString(flagLoginBrowser)
 	browserPath := browserToPath[browser]
+	sectionName := v.GetString(flagLoginSectionName)
+	fieldTitle := v.GetString(flagLoginFieldTitle)
 	sessionDirectory := v.GetString(flagSessionDirectory)
 	sessionFilename := v.GetString(flagSessionFilename)
 
@@ -145,9 +151,9 @@ func login(cmd *cobra.Command, args []string) error {
 
 	var accountAlias string
 	for _, section := range item.Details.Sections {
-		if section.Title == "ACCOUNT_INFO" {
+		if section.Title == sectionName {
 			for _, field := range section.Fields {
-				if field.T == "Account Alias" {
+				if field.T == fieldTitle {
 					accountAlias = field.V
 				}
 			}
