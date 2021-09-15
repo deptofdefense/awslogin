@@ -21,6 +21,17 @@ help: ## Print the help documentation
 
 # ----- CLI Targets -----
 
+bin/goreleaser: ## Build the goreleaser binary
+	go build -o bin/goreleaser github.com/goreleaser/goreleaser
+
+.PHONY: build-release
+build-release: bin/goreleaser ## Build the golang binaries
+	bin/goreleaser release --snapshot --skip-publish --rm-dist
+
+.PHONY: release
+release: bin/goreleaser ## Release the golang binaries to Github
+	bin/goreleaser release --rm-dist --skip-sign
+
 bin/awslogin: ## Build awslogin
 	GOARCH=amd64 $(CC) build -ldflags "$(LDFLAGS) $(COMMON_LDFLAGS)" -o $@ $(GOPKG)/cmd/$(notdir $@)
 
