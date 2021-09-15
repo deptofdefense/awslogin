@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 func Signin(sessionFilename string) (*Config, error) {
@@ -18,7 +18,7 @@ func Signin(sessionFilename string) (*Config, error) {
 	}
 
 	fmt.Println("Enter your 1Password password:")
-	bytePassword, errReadPassword := terminal.ReadPassword(0)
+	bytePassword, errReadPassword := term.ReadPassword(0)
 	if errReadPassword != nil {
 		log.Fatal(errReadPassword)
 	}
