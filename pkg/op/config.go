@@ -29,7 +29,10 @@ func (config *Config) GetEnvVars() []string {
 
 func CheckSession(sessionFilename string) (*Config, error) {
 	if _, err := os.Stat(sessionFilename); os.IsNotExist(err) {
-		return nil, fmt.Errorf("The session filename does not exist at %s\n", sessionFilename)
+		_, errCreate := os.Create(sessionFilename)
+		if errCreate != nil {
+			return nil, fmt.Errorf("Unable to create a session file at %q", sessionFilename)
+		}
 	}
 
 	config, err := LoadConfig(sessionFilename)
@@ -63,10 +66,14 @@ func LoadConfig(filename string) (*Config, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	var config Config
+	if len(data) == 0 {
+		return &config, nil
+	}
 	err = json.Unmarshal(data, &config)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Unable to read JSON file at %q: %w", filename, err)
 	}
 	return &config, nil
 }
