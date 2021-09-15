@@ -66,6 +66,11 @@ func login(cmd *cobra.Command, args []string) error {
 		return errConfig
 	}
 
+	var filters []string
+	if len(args) > 0 {
+		filters = args
+	}
+
 	browser := v.GetString(flagLoginBrowser)
 	browserPath := browserToPath[browser]
 	sessionDirectory := v.GetString(flagSessionDirectory)
@@ -90,22 +95,45 @@ func login(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	for num, item := range items {
-		fmt.Println(num, item.Overview.Title)
+
+	// Filter the items first
+	newItemList := []op.Item{}
+	if len(filters) > 0 {
+		for _, item := range items {
+			for _, f := range filters {
+				title := item.Overview.Title
+				if strings.Contains(title, f) {
+					newItemList = append(newItemList, item)
+				}
+			}
+		}
+	} else {
+		newItemList = items
 	}
 
-	fmt.Printf("\nChoose a secret's number: ")
-	reader := bufio.NewReader(os.Stdin)
-	choice, err := reader.ReadString('\n')
-	if err != nil {
-		return err
+	var title string
+	if len(newItemList) > 1 {
+		for num, item := range newItemList {
+			fmt.Println(num, item.Overview.Title)
+		}
+
+		fmt.Printf("\nChoose a secret's number: ")
+		reader := bufio.NewReader(os.Stdin)
+		choice, err := reader.ReadString('\n')
+		if err != nil {
+			return err
+		}
+		numChoice, err := strconv.Atoi(strings.TrimSpace(choice))
+		if err != nil {
+			return err
+		}
+		title = newItemList[numChoice].Overview.Title
+		fmt.Printf("\nYou chose: %s\n\n", title)
+	} else if len(newItemList) == 1 {
+		title = newItemList[0].Overview.Title
+	} else {
+		return fmt.Errorf("No entries were found using filters %v", filters)
 	}
-	numChoice, err := strconv.Atoi(strings.TrimSpace(choice))
-	if err != nil {
-		return err
-	}
-	title := items[numChoice].Overview.Title
-	fmt.Printf("\nYou chose: %s\n\n", title)
 
 	item, err := config.GetItem(title)
 	if err != nil {
@@ -124,7 +152,7 @@ func login(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(strings.TrimSpace(accountAlias)) == 0 {
-		return fmt.Errorf("There is no account alias defined for the choice %d %q", numChoice, title)
+		return fmt.Errorf("There is no account alias defined for the choice %q", title)
 	}
 
 	fmt.Printf("Account Alias: %s\n", accountAlias)
@@ -139,9 +167,7 @@ func login(cmd *cobra.Command, args []string) error {
 
 	// Create the commands to use
 	command1 := exec.Command("/usr/local/bin/aws-vault", "login", accountAlias, "--mfa-token", oneTimePassword, "--stdout")
-	fmt.Println(command1.String())
 	command2 := exec.Command("xargs", append([]string{"-t"}, browserPath...)...)
-	fmt.Println(command2.String())
 
 	// Set up the pipe
 	readPipe, writePipe, err := os.Pipe()
