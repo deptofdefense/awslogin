@@ -11,6 +11,10 @@ import (
 
 const (
 	CLI_NAME = "awslogin"
+	HOMEDIR  = "~/"
+
+	flagSessionDirectory = "session-directory"
+	flagSessionFilename  = "session-filename"
 )
 
 func initViper(cmd *cobra.Command) (*viper.Viper, error) {
