@@ -72,29 +72,8 @@ func main() {
 	}
 	initLoginFlags(loginCommand.Flags())
 
-	opSigninCommand := &cobra.Command{
-		Use:                   `op-signin [flags]`,
-		DisableFlagsInUseLine: true,
-		Short:                 "signin to 1Password",
-		SilenceErrors:         true,
-		SilenceUsage:          true,
-		RunE:                  opSignin,
-	}
-	initOPSigninFlags(opSigninCommand.Flags())
-
-	versionCommand := &cobra.Command{
-		Use:                   `version`,
-		DisableFlagsInUseLine: true,
-		Short:                 "gitlab POC on events",
-		SilenceErrors:         true,
-		SilenceUsage:          true,
-		RunE:                  printVersion,
-	}
-
 	rootCommand.AddCommand(
 		loginCommand,
-		opSigninCommand,
-		versionCommand,
 	)
 
 	if err := rootCommand.Execute(); err != nil {
