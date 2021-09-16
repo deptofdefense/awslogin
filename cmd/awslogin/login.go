@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -13,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/deptofdefense/awslogin/pkg/awsvault"
 	"github.com/deptofdefense/awslogin/pkg/op"
 	"github.com/deptofdefense/awslogin/pkg/version"
 
@@ -164,7 +164,7 @@ func login(cmd *cobra.Command, args []string) error {
 	if sessionDirectory == HOMEDIR {
 		homedir, errUserHomeDir := os.UserHomeDir()
 		if errUserHomeDir != nil {
-			log.Fatal(errUserHomeDir)
+			return errUserHomeDir
 		}
 		sessionDirectory = homedir
 	}
@@ -248,16 +248,30 @@ func login(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("Account Alias: %s\n", accountAlias)
 
-	totp, errGetTotp := config.GetTotp(title)
-	if errGetTotp != nil {
-		return errGetTotp
+	// See if an active session exists already
+	profileSessions, err := awsvault.GetSessions()
+	if err != nil {
+		return err
 	}
 
-	oneTimePassword := strings.TrimSpace(*totp)
-	fmt.Printf("MFA Token: %s\n", oneTimePassword)
+	sessionDuration, ok := profileSessions[accountAlias]
+	commandArgs1 := []string{"login", accountAlias, "--stdout"}
+	// If no active session or the session duration is negative then get the OTP again
+	if !ok || sessionDuration < 0 {
+		totp, errGetTotp := config.GetTotp(title)
+		if errGetTotp != nil {
+			return errGetTotp
+		}
+
+		oneTimePassword := strings.TrimSpace(*totp)
+		fmt.Printf("MFA Token: %s\n", oneTimePassword)
+
+		// Create the commands to use
+		commandArgs1 = append(commandArgs1, "--mfa-token", oneTimePassword)
+	}
 
 	// Create the commands to use
-	command1 := exec.Command("/usr/local/bin/aws-vault", "login", accountAlias, "--mfa-token", oneTimePassword, "--stdout")
+	command1 := exec.Command("/usr/local/bin/aws-vault", commandArgs1...)
 	command2 := exec.Command("xargs", append([]string{"-t"}, browserPath...)...)
 
 	// Set up the pipe
@@ -281,7 +295,6 @@ func login(cmd *cobra.Command, args []string) error {
 		defer writePipe.Close()
 		_ = command1.Wait()
 	}()
-	_ = command2.Run()
 
 	return nil
 }
