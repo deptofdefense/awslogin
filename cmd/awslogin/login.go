@@ -218,7 +218,8 @@ func login(cmd *cobra.Command, args []string) error {
 		if errCheckSession != nil {
 			return errCheckSession
 		}
-		if title == "" {
+		// A safety switch to ensure a title exists
+		if len(title) == 0 && len(accountAlias) > 0 {
 			title = fmt.Sprintf("AWS %s", accountAlias)
 		}
 		totp, errGetTotp := config.GetTotp(title)
