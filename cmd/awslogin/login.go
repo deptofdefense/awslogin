@@ -182,7 +182,6 @@ func login(cmd *cobra.Command, args []string) error {
 	}
 
 	// Filter the items first
-	// TODO: Sort by name of title
 	newItemList := []op.Item{}
 	if len(filters) > 0 {
 		for _, item := range items {
