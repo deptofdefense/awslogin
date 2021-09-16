@@ -5,6 +5,7 @@ GOPKG = github.com/deptofdefense/awslogin
 
 ROOT = $(shell pwd)
 BINDIR = $(ROOT)/bin
+DISTDIR = $(ROOT)/dist
 
 GIT_COMMIT ?= $(shell git rev-list -1 HEAD)
 COMMON_LDFLAGS=-s -w -X $(GOPKG)/pkg/version.commit=$(GIT_COMMIT)
@@ -53,4 +54,5 @@ test_coverage: ## Tests with coverage
 .PHONY: clean
 clean: ## Clean up built items
 	-(rm -rf $(BINDIR))
+	-(rm -rf $(DISTDIR))
 	-(rm -f coverage.out)
