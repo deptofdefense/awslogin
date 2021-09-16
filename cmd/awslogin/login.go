@@ -144,17 +144,13 @@ func login(cmd *cobra.Command, args []string) error {
 		return errPreCheck
 	}
 
+	// Handle Args
 	var filters []string
 	if len(args) > 0 {
 		filters = args
 	}
 
-	// If the AWS_PROFILE is set then filter on it
-	awsProfile := os.Getenv("AWS_PROFILE")
-	if len(awsProfile) > 0 {
-		filters = append(filters, awsProfile)
-	}
-
+	// Handle Flags
 	browser := v.GetString(flagLoginBrowser)
 	browserPath := browserToPath[browser]
 	sectionName := v.GetString(flagLoginSectionName)
@@ -162,6 +158,7 @@ func login(cmd *cobra.Command, args []string) error {
 	sessionDirectory := v.GetString(flagSessionDirectory)
 	sessionFilename := v.GetString(flagSessionFilename)
 
+	// Get the session path for using 1Password
 	if sessionDirectory == HOMEDIR {
 		homedir, errUserHomeDir := os.UserHomeDir()
 		if errUserHomeDir != nil {
@@ -171,15 +168,92 @@ func login(cmd *cobra.Command, args []string) error {
 	}
 	sessionPath := path.Join(sessionDirectory, sessionFilename)
 
-	config, errCheckSession := op.CheckSession(sessionPath)
-	if errCheckSession != nil {
-		return errCheckSession
+	// AWS_PROFILE is a special env var which can be used to immediately log in
+	accountAlias := os.Getenv("AWS_PROFILE")
+
+	awsVault := &cli.AwsVault{}
+	keyring, err := awsVault.Keyring()
+	if err != nil {
+		return err
 	}
+
+	awsConfigFile, err := awsVault.AwsConfigFile()
+	if err != nil {
+		return err
+	}
+
+	// See if an active session exists already
+	profileSessions, err := awsvault.GetSessions(awsConfigFile, keyring)
+	if err != nil {
+		return err
+	}
+
+	var loginURL *string
+	var errGetLoginURL error
+	var title string
+
+	if len(accountAlias) == 0 {
+		config, errCheckSession := op.CheckSession(sessionPath)
+		if errCheckSession != nil {
+			return errCheckSession
+		}
+
+		var errChooseAccountAlias error
+		title, accountAlias, errChooseAccountAlias = chooseAccountAlias(config, sectionName, fieldTitle, filters)
+		if errChooseAccountAlias != nil {
+			return errChooseAccountAlias
+		}
+	}
+
+	sessionDuration, ok := profileSessions[accountAlias]
+
+	// If no active session or the session duration is negative then get the OTP again
+	if ok && sessionDuration > 0 {
+		loginURL, errGetLoginURL = awsvault.GetLoginURL(accountAlias, "", awsConfigFile, keyring)
+		if errGetLoginURL != nil {
+			return errGetLoginURL
+		}
+	} else {
+		config, errCheckSession := op.CheckSession(sessionPath)
+		if errCheckSession != nil {
+			return errCheckSession
+		}
+		if title == "" {
+			title = fmt.Sprintf("AWS %s", accountAlias)
+		}
+		totp, errGetTotp := config.GetTotp(title)
+		if errGetTotp != nil {
+			return errGetTotp
+		}
+
+		oneTimePassword := strings.TrimSpace(*totp)
+		fmt.Printf("MFA Token: %s\n", oneTimePassword)
+
+		loginURL, errGetLoginURL = awsvault.GetLoginURL(accountAlias, oneTimePassword, awsConfigFile, keyring)
+		if errGetLoginURL != nil {
+			return errGetLoginURL
+		}
+	}
+
+	fmt.Printf("Account Alias: %s\n", accountAlias)
+
+	// Create the commands to use
+	command := exec.Command(browserPath[0], append(browserPath[1:], *loginURL)...)
+
+	errStart := command.Start()
+	if errStart != nil {
+		return errStart
+	}
+
+	return nil
+}
+
+func chooseAccountAlias(config *op.Config, sectionName, fieldTitle string, filters []string) (string, string, error) {
 
 	tags := "aws"
 	items, errListItems := config.ListItems(tags)
 	if errListItems != nil {
-		return errListItems
+		return "", "", errListItems
 	}
 
 	// Filter the items first
@@ -212,23 +286,23 @@ func login(cmd *cobra.Command, args []string) error {
 		reader := bufio.NewReader(os.Stdin)
 		choice, errReadString := reader.ReadString('\n')
 		if errReadString != nil {
-			return errReadString
+			return "", "", errReadString
 		}
 		numChoice, errAtoi := strconv.Atoi(strings.TrimSpace(choice))
 		if errAtoi != nil {
-			return errAtoi
+			return "", "", errAtoi
 		}
 		title = newItemList[numChoice].Overview.Title
 		fmt.Printf("\nYou chose: %s\n\n", title)
 	} else if len(newItemList) == 1 {
 		title = newItemList[0].Overview.Title
 	} else {
-		return fmt.Errorf("No entries were found using filters %v\n", filters)
+		return "", "", fmt.Errorf("No entries were found using filters %v\n", filters)
 	}
 
 	item, errGetItem := config.GetItem(title)
 	if errGetItem != nil {
-		return errGetItem
+		return "", "", errGetItem
 	}
 
 	var accountAlias string
@@ -243,59 +317,7 @@ func login(cmd *cobra.Command, args []string) error {
 	}
 
 	if len(strings.TrimSpace(accountAlias)) == 0 {
-		return fmt.Errorf("There is no account alias defined for the choice %q\n", title)
+		return "", "", fmt.Errorf("There is no account alias defined for the choice %q\n", title)
 	}
-
-	fmt.Printf("Account Alias: %s\n", accountAlias)
-
-	awsVault := &cli.AwsVault{}
-	keyring, err := awsVault.Keyring()
-	if err != nil {
-		return err
-	}
-
-	awsConfigFile, err := awsVault.AwsConfigFile()
-	if err != nil {
-		return err
-	}
-
-	// See if an active session exists already
-	profileSessions, err := awsvault.GetSessions(awsConfigFile, keyring)
-	if err != nil {
-		return err
-	}
-
-	sessionDuration, ok := profileSessions[accountAlias]
-	var loginURL *string
-	var errGetLoginURL error
-	// If no active session or the session duration is negative then get the OTP again
-	if !ok || sessionDuration < 0 {
-		totp, errGetTotp := config.GetTotp(title)
-		if errGetTotp != nil {
-			return errGetTotp
-		}
-
-		oneTimePassword := strings.TrimSpace(*totp)
-		fmt.Printf("MFA Token: %s\n", oneTimePassword)
-
-		loginURL, errGetLoginURL = awsvault.GetLoginURL(accountAlias, oneTimePassword, awsConfigFile, keyring)
-		if errGetLoginURL != nil {
-			return errGetLoginURL
-		}
-	} else {
-		loginURL, errGetLoginURL = awsvault.GetLoginURL(accountAlias, "", awsConfigFile, keyring)
-		if errGetLoginURL != nil {
-			return errGetLoginURL
-		}
-	}
-
-	// Create the commands to use
-	command := exec.Command(browserPath[0], append(browserPath[1:], *loginURL)...)
-
-	errStart := command.Start()
-	if errStart != nil {
-		return errStart
-	}
-
-	return nil
+	return title, accountAlias, nil
 }
