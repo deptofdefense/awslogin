@@ -146,10 +146,16 @@ func login(cmd *cobra.Command, args []string) error {
 		return errPreCheck
 	}
 
+	// AWS_PROFILE is a special env var which can be used to immediately log in
+	accountAlias := os.Getenv("AWS_PROFILE")
+
 	// Handle Args
 	var filters []string
 	if len(args) > 0 {
-		filters = args
+		// When using filters the AWS_PROFILE should be added to the list
+		filters = append(args, accountAlias)
+		// The accountAlias is set to an empty string to ensure that the filters are used
+		accountAlias = ""
 	}
 
 	// Handle Flags
@@ -170,9 +176,6 @@ func login(cmd *cobra.Command, args []string) error {
 		sessionDirectory = homedir
 	}
 	sessionPath := path.Join(sessionDirectory, sessionFilename)
-
-	// AWS_PROFILE is a special env var which can be used to immediately log in
-	accountAlias := os.Getenv("AWS_PROFILE")
 
 	awsVault := &cli.AwsVault{}
 	keyring, err := awsVault.Keyring()
