@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path"
@@ -12,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/99designs/aws-vault/v6/cli"
 	"github.com/deptofdefense/awslogin/pkg/awsvault"
 	"github.com/deptofdefense/awslogin/pkg/op"
 	"github.com/deptofdefense/awslogin/pkg/version"
@@ -119,6 +122,9 @@ func preCheck(commandName string, commandArgs []string, expected string) error {
 }
 
 func login(cmd *cobra.Command, args []string) error {
+	// Disable the logging from the vault package
+	log.SetOutput(ioutil.Discard)
+
 	v, errViper := initViper(cmd)
 	if errViper != nil {
 		return fmt.Errorf("error initializing viper: %w\n", errViper)
@@ -247,14 +253,26 @@ func login(cmd *cobra.Command, args []string) error {
 
 	fmt.Printf("Account Alias: %s\n", accountAlias)
 
+	awsVault := &cli.AwsVault{}
+	keyring, err := awsVault.Keyring()
+	if err != nil {
+		return err
+	}
+
+	awsConfigFile, err := awsVault.AwsConfigFile()
+	if err != nil {
+		return err
+	}
+
 	// See if an active session exists already
-	profileSessions, err := awsvault.GetSessions()
+	profileSessions, err := awsvault.GetSessions(awsConfigFile, keyring)
 	if err != nil {
 		return err
 	}
 
 	sessionDuration, ok := profileSessions[accountAlias]
-	commandArgs1 := []string{"login", accountAlias, "--stdout"}
+	var loginURL *string
+	var errGetLoginURL error
 	// If no active session or the session duration is negative then get the OTP again
 	if !ok || sessionDuration < 0 {
 		totp, errGetTotp := config.GetTotp(title)
@@ -265,35 +283,24 @@ func login(cmd *cobra.Command, args []string) error {
 		oneTimePassword := strings.TrimSpace(*totp)
 		fmt.Printf("MFA Token: %s\n", oneTimePassword)
 
-		// Create the commands to use
-		commandArgs1 = append(commandArgs1, "--mfa-token", oneTimePassword)
+		loginURL, errGetLoginURL = awsvault.GetLoginURL(accountAlias, oneTimePassword, awsConfigFile, keyring)
+		if errGetLoginURL != nil {
+			return errGetLoginURL
+		}
+	} else {
+		loginURL, errGetLoginURL = awsvault.GetLoginURL(accountAlias, "", awsConfigFile, keyring)
+		if errGetLoginURL != nil {
+			return errGetLoginURL
+		}
 	}
 
 	// Create the commands to use
-	command1 := exec.Command("/usr/local/bin/aws-vault", commandArgs1...)
-	command2 := exec.Command("xargs", append([]string{"-t"}, browserPath...)...)
+	command := exec.Command(browserPath[0], append(browserPath[1:], *loginURL)...)
 
-	// Set up the pipe
-	readPipe, writePipe, errPipe := os.Pipe()
-	if errPipe != nil {
-		return errPipe
+	errStart := command.Start()
+	if errStart != nil {
+		return errStart
 	}
-	command1.Stdout = writePipe
-	command2.Stdin = readPipe
-	command2.Stdout = os.Stdout
-	errStart1 := command1.Start()
-	if errStart1 != nil {
-		return errStart1
-	}
-	errStart2 := command2.Start()
-	if errStart2 != nil {
-		return errStart2
-	}
-
-	go func() {
-		defer writePipe.Close()
-		_ = command1.Wait()
-	}()
 
 	return nil
 }

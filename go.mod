@@ -4,6 +4,8 @@ go 1.17
 
 require (
 	github.com/99designs/aws-vault/v6 v6.3.1
+	github.com/99designs/keyring v1.1.6
+	github.com/aws/aws-sdk-go v1.40.34
 	github.com/goreleaser/goreleaser v0.179.0
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
@@ -18,7 +20,6 @@ require (
 	cloud.google.com/go/kms v0.1.0 // indirect
 	cloud.google.com/go/storage v1.16.1 // indirect
 	code.gitea.io/sdk/gitea v0.15.0 // indirect
-	github.com/99designs/keyring v1.1.6 // indirect
 	github.com/AlekSi/pointer v1.1.0 // indirect
 	github.com/Azure/azure-pipeline-go v0.2.3 // indirect
 	github.com/Azure/azure-sdk-for-go v57.0.0+incompatible // indirect
@@ -47,7 +48,6 @@ require (
 	github.com/alecthomas/units v0.0.0-20210208195552-ff826a37aa15 // indirect
 	github.com/apex/log v1.9.0 // indirect
 	github.com/atc0005/go-teams-notify/v2 v2.6.0 // indirect
-	github.com/aws/aws-sdk-go v1.40.34 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.9.0 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.7.0 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.4.0 // indirect
