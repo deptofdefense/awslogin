@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"golang.org/x/term"
+	"github.com/99designs/aws-vault/v6/prompt"
 )
 
 func Signin(sessionFilename string) (*Config, error) {
@@ -17,12 +17,10 @@ func Signin(sessionFilename string) (*Config, error) {
 		return nil, errGetExecPath
 	}
 
-	fmt.Println("Enter your 1Password password:")
-	bytePassword, errReadPassword := term.ReadPassword(0)
-	if errReadPassword != nil {
-		log.Fatal(errReadPassword)
+	pass, errTerminalSecretPrompt := prompt.TerminalSecretPrompt("Enter your 1Password password: ")
+	if errTerminalSecretPrompt != nil {
+		return nil, errTerminalSecretPrompt
 	}
-	pass := strings.TrimSpace(string(bytePassword))
 
 	command := exec.Command(*opPath, "signin")
 	stdin, errStdinPipe := command.StdinPipe()
