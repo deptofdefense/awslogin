@@ -1,0 +1,10 @@
+#! /usr/bin/env bash
+
+#
+# This is a template. Make a copy before modifying:
+#
+#   cp .envrc.local.template .envrc.local
+#
+
+# Set profile for command-line tool
+export AWS_PROFILE=
