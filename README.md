@@ -6,9 +6,15 @@ This is a tool used to log into AWS accounts using 1Password MFA tokens.
 
 Before using this tool you must install these prerequisites:
 
-- [1Password Command Line Tool](https://support.1password.com/command-line-getting-started/)
-- [aws-vault](https://github.com/99designs/aws-vault)
-- A web browser such as Chrome, Safari, or Firefox
+* [1Password Command Line Tool](https://support.1password.com/command-line-getting-started/) @ version 1.11.4 or later
+* [aws-vault](https://github.com/99designs/aws-vault) @ version v6.3.1 or later
+
+Supported web browsers include:
+
+* Chrome
+* Chrome Canary
+* Safari
+* Firefox
 
 You must then sign into 1Password at least once using the `op` command. Also include a `--shorthand` for future use.
 

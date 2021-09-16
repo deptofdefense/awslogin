@@ -1,44 +1,19 @@
 package awsvault
 
 import (
-	"io/ioutil"
-	"log"
 	"time"
 
-	"github.com/99designs/aws-vault/v6/cli"
 	"github.com/99designs/aws-vault/v6/vault"
+	"github.com/99designs/keyring"
 )
 
-func GetProfiles() ([]string, error) {
-	// Disable the logging from the vault package
-	log.SetOutput(ioutil.Discard)
+func GetProfiles(f *vault.ConfigFile) ([]string, error) {
 
-	awsVault := &cli.AwsVault{}
-
-	awsConfigFile, err := awsVault.AwsConfigFile()
-	if err != nil {
-		return []string{}, err
-	}
-
-	return awsConfigFile.ProfileNames(), nil
+	return f.ProfileNames(), nil
 }
 
-func GetSessions() (map[string]time.Duration, error) {
-	// Disable the logging from the vault package
-	log.SetOutput(ioutil.Discard)
-
+func GetSessions(f *vault.ConfigFile, keyring keyring.Keyring) (map[string]time.Duration, error) {
 	profileSessions := map[string]time.Duration{}
-
-	awsVault := &cli.AwsVault{}
-	keyring, err := awsVault.Keyring()
-	if err != nil {
-		return profileSessions, err
-	}
-
-	awsConfigFile, err := awsVault.AwsConfigFile()
-	if err != nil {
-		return profileSessions, err
-	}
 
 	credentialKeyring := &vault.CredentialKeyring{Keyring: keyring}
 	sessionKeyring := &vault.SessionKeyring{Keyring: credentialKeyring.Keyring}
@@ -48,7 +23,7 @@ func GetSessions() (map[string]time.Duration, error) {
 		return profileSessions, err
 	}
 
-	for _, profileName := range awsConfigFile.ProfileNames() {
+	for _, profileName := range f.ProfileNames() {
 
 		// check session keyring
 		for _, sess := range sessions {
