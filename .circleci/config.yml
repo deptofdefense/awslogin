@@ -75,6 +75,7 @@ workflows:
       - build:
           requires:
             - test
+
       - verify_macos:
           requires:
-            - build_cli
+            - build
