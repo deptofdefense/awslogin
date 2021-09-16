@@ -89,3 +89,7 @@ go run github.com/deptofdefense/awslogin/cmd/awslogin alias-example --browser fi
 In the case where you are using a system to manage environment variables (like [direnv](https://direnv.net)) you may
 want the program to automatically sign you in to whatever the environment variable for `AWS_PROFILE` is set to. This
 program will automatically add the value of `AWS_PROFILE` to your set of filters to use when logging in.
+
+To understand more clearly how the program chooses what to do here is a flow diagram:
+
+![Login Flow Diagram](./images/login_flow.png)
