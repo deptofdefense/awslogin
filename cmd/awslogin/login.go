@@ -40,8 +40,7 @@ const (
 	browserSafari          = "safari"
 	browserFirefox         = "firefox"
 
-	minVersionOP       = "1.11.4"
-	minVersionAWSVault = "v6.3.1"
+	minVersionOP = "1.11.4"
 )
 
 var (
@@ -141,10 +140,6 @@ func login(cmd *cobra.Command, args []string) error {
 
 	// Confirm that the minimum version is met for these tools
 	errPreCheck := preCheck("/usr/local/bin/op", []string{"--version"}, minVersionOP)
-	if errPreCheck != nil {
-		return errPreCheck
-	}
-	errPreCheck = preCheck("/usr/local/bin/aws-vault", []string{"--version"}, minVersionAWSVault)
 	if errPreCheck != nil {
 		return errPreCheck
 	}
