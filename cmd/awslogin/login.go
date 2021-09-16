@@ -30,6 +30,7 @@ const (
 	flagLoginSectionName = "section-name"
 	flagLoginFieldTitle  = "field-title"
 	flagLoginVersion     = "version"
+	flagLoginVerbose     = "verbose"
 
 	flagSessionDirectory = "session-directory"
 	flagSessionFilename  = "session-filename"
@@ -65,6 +66,7 @@ func initLoginFlags(flag *pflag.FlagSet) {
 	flag.String(flagSessionDirectory, HOMEDIR, "The path of the directory to hold the session information")
 	flag.String(flagSessionFilename, SESSION_FILE, "The name of the file to retain session information")
 	flag.Bool(flagLoginVersion, false, "Display the version information and exit")
+	flag.Bool(flagLoginVerbose, false, "Use verbose output")
 }
 
 func checkLoginConfig(v *viper.Viper) error {
@@ -157,6 +159,7 @@ func login(cmd *cobra.Command, args []string) error {
 	fieldTitle := v.GetString(flagLoginFieldTitle)
 	sessionDirectory := v.GetString(flagSessionDirectory)
 	sessionFilename := v.GetString(flagSessionFilename)
+	verbose := v.GetBool(flagLoginVerbose)
 
 	// Get the session path for using 1Password
 	if sessionDirectory == HOMEDIR {
@@ -228,7 +231,9 @@ func login(cmd *cobra.Command, args []string) error {
 		}
 
 		oneTimePassword := strings.TrimSpace(*totp)
-		fmt.Printf("MFA Token: %s\n", oneTimePassword)
+		if verbose {
+			fmt.Printf("MFA Token: %s\n", oneTimePassword)
+		}
 
 		loginURL, errGetLoginURL = awsvault.GetLoginURL(accountAlias, oneTimePassword, awsConfigFile, keyring)
 		if errGetLoginURL != nil {
@@ -236,7 +241,9 @@ func login(cmd *cobra.Command, args []string) error {
 		}
 	}
 
-	fmt.Printf("Account Alias: %s\n", accountAlias)
+	if verbose {
+		fmt.Printf("Account Alias: %s\n", accountAlias)
+	}
 
 	// Create the commands to use
 	command := exec.Command(browserPath[0], append(browserPath[1:], *loginURL)...)
@@ -283,7 +290,7 @@ func chooseAccountAlias(config *op.Config, sectionName, fieldTitle string, filte
 			fmt.Println(num, item.Overview.Title)
 		}
 
-		fmt.Printf("\nChoose a secret's number: ")
+		fmt.Printf("\nChoose the account number: ")
 		reader := bufio.NewReader(os.Stdin)
 		choice, errReadString := reader.ReadString('\n')
 		if errReadString != nil {
@@ -294,7 +301,7 @@ func chooseAccountAlias(config *op.Config, sectionName, fieldTitle string, filte
 			return "", "", errAtoi
 		}
 		title = newItemList[numChoice].Overview.Title
-		fmt.Printf("\nYou chose: %s\n\n", title)
+		fmt.Printf("\nChosen account: %s\n\n", title)
 	} else if len(newItemList) == 1 {
 		title = newItemList[0].Overview.Title
 	} else {
