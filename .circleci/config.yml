@@ -1,0 +1,81 @@
+version: '2.1'
+
+executors:
+  main:
+    docker:
+      - image: cimg/go:1.17
+
+  macos:
+    macos:
+      xcode: 11.5.0
+      resource_class: medium
+
+jobs:
+
+  # `test` tests the source code.
+  test:
+    executor: main
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: false
+      - run: make test
+
+  # `build` builds the golang files
+  build:
+    executor: main
+    environment:
+      GOPKG: github.com/deptofdefense/awslogin
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: false
+      - run: make tidy
+      - run: make build-release
+      - run: rm -f bin/goreleaser
+      - store_artifacts:
+          path: dist
+          destination: /
+      - persist_to_workspace:
+          root: dist
+          paths:
+            - awslogin_darwin_amd64/awslogin
+
+  # `verify_macos` verifies the macos build
+  verify_macos:
+    executor: macos
+    steps:
+      - attach_workspace:
+          at: dist
+      - run: dist/awslogin_darwin_amd64/awslogin --help
+
+  # `release` releases the golang binaries to github
+  release:
+    executor: main
+    steps:
+      - checkout
+      - setup_remote_docker:
+          docker_layer_caching: false
+      - run: make release
+
+workflows:
+  version: 2
+  main:
+    jobs:
+      - release:
+          filters:
+            # Only run this job on git tag pushes
+            branches:
+              ignore: /.*/
+            tags:
+              only: /v[0-9]+(\.[0-9]+)*(-.*)*/
+
+      - test
+
+      - build:
+          requires:
+            - test
+
+      - verify_macos:
+          requires:
+            - build

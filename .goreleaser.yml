@@ -1,0 +1,50 @@
+
+project_name: awslogin
+
+env:
+  - CGO_ENABLED=0
+before:
+  hooks:
+    - go mod tidy
+builds:
+  - main: ./cmd/awslogin
+    id: awslogin
+    binary: awslogin
+    goos:
+      - darwin
+    goarch:
+      - amd64
+    flags:
+      - -mod=readonly
+      - -trimpath # removes all file system paths from the compiled executable
+    ldflags:
+      - -s -w
+      - -X github.com/deptofdefense/awslogin/pkg/version.commit={{ .Commit }}
+archives:
+  - id: awslogin
+    name_template: '{{ .Binary }}_{{ .Tag }}_{{ .Os }}_{{ .Arch }}'
+    builds:
+      - awslogin
+    format: tar.gz
+    files:
+      - LICENSE
+      - README.md
+checksum:
+  name_template: '{{ .ProjectName }}_{{ .Tag }}_SHA256SUMS'
+  algorithm: sha256
+snapshot:
+  name_template: "SNAPSHOT-{{ .Commit }}"
+changelog:
+  skip: true
+release:
+  github:
+    owner: deptofdefense
+    name: awslogin
+gomod:
+  proxy: true
+  # If proxy is true, use these environment variables when running `go mod` commands (namely, `go mod tidy`).
+  # Defaults to `os.Environ()`.
+  env:
+    - GOPROXY=https://proxy.golang.org,direct
+    - GOSUMDB=sum.golang.org
+    - GOPRIVATE=github.com/deptofdefense/awslogin

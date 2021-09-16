@@ -5,6 +5,7 @@ GOPKG = github.com/deptofdefense/awslogin
 
 ROOT = $(shell pwd)
 BINDIR = $(ROOT)/bin
+DISTDIR = $(ROOT)/dist
 
 GIT_COMMIT ?= $(shell git rev-list -1 HEAD)
 COMMON_LDFLAGS=-s -w -X $(GOPKG)/pkg/version.commit=$(GIT_COMMIT)
@@ -20,6 +21,17 @@ help: ## Print the help documentation
 	@grep -E '^[\/a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
 
 # ----- CLI Targets -----
+
+bin/goreleaser: ## Build the goreleaser binary
+	go build -o bin/goreleaser github.com/goreleaser/goreleaser
+
+.PHONY: build-release
+build-release: bin/goreleaser ## Build the golang binaries
+	bin/goreleaser release --snapshot --skip-publish --rm-dist
+
+.PHONY: release
+release: bin/goreleaser ## Release the golang binaries to Github
+	bin/goreleaser release --rm-dist --skip-sign
 
 bin/awslogin: ## Build awslogin
 	GOARCH=amd64 $(CC) build -ldflags "$(LDFLAGS) $(COMMON_LDFLAGS)" -o $@ $(GOPKG)/cmd/$(notdir $@)
@@ -42,4 +54,5 @@ test_coverage: ## Tests with coverage
 .PHONY: clean
 clean: ## Clean up built items
 	-(rm -rf $(BINDIR))
+	-(rm -rf $(DISTDIR))
 	-(rm -f coverage.out)

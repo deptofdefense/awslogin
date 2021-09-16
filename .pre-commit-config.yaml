@@ -19,6 +19,14 @@ repos:
     hooks:
       - id: markdownlint
 
+  - repo: local
+    hooks:
+      - id: circleci-validate
+        name: circleci validate
+        entry: circleci config validate
+        language: system
+        files: .circleci/config.yml
+
   - repo: git://github.com/detailyang/pre-commit-shell
     rev: 1.0.5
     hooks:
