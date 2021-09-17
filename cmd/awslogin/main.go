@@ -21,6 +21,7 @@ func initViper(cmd *cobra.Command) (*viper.Viper, error) {
 	if errBind != nil {
 		return v, fmt.Errorf("error binding flag set to viper: %w\n", errBind)
 	}
+	v.SetEnvPrefix(CLI_NAME) // Enforces all env vars to require "AWSLOGIN_", making them unique
 	v.SetEnvKeyReplacer(strings.NewReplacer("-", "_"))
 	v.AutomaticEnv() // set environment variables to overwrite config
 	return v, nil

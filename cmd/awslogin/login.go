@@ -26,14 +26,13 @@ import (
 )
 
 const (
-	flagLoginBrowser     = "browser"
-	flagLoginSectionName = "section-name"
-	flagLoginFieldTitle  = "field-title"
-	flagLoginVersion     = "version"
-	flagLoginVerbose     = "verbose"
-
-	flagSessionDirectory = "session-directory"
-	flagSessionFilename  = "session-filename"
+	flagLoginBrowser          = "browser"
+	flagLoginFieldTitle       = "field-title"
+	flagLoginSectionName      = "section-name"
+	flagLoginSessionDirectory = "session-directory"
+	flagLoginSessionFilename  = "session-filename"
+	flagLoginVerbose          = "verbose"
+	flagLoginVersion          = "version"
 
 	browserChrome          = "chrome"
 	browserChromeIncognito = "chrome-incognito"
@@ -60,11 +59,11 @@ var (
 )
 
 func initLoginFlags(flag *pflag.FlagSet) {
-	flag.String(flagLoginBrowser, browserChrome, "The browser to open with")
-	flag.String(flagLoginSectionName, "ACCOUNT_INFO", "The 1Password section name used to identify AWS credentials")
+	flag.String(flagLoginBrowser, browserChrome, "The browser to open the Login URL")
+	flag.String(flagLoginSectionName, "ACCOUNT_INFO", "The 1Password section name used to identify AWS Account Info")
 	flag.String(flagLoginFieldTitle, "ACCOUNT_ALIAS", "The 1Password field title used to identify AWS Account Alias")
-	flag.String(flagSessionDirectory, HOMEDIR, "The path of the directory to hold the session information")
-	flag.String(flagSessionFilename, SESSION_FILE, "The name of the file to retain session information")
+	flag.String(flagLoginSessionDirectory, HOMEDIR, "The path of the directory to hold the session information")
+	flag.String(flagLoginSessionFilename, SESSION_FILE, "The name of the file to retain session information")
 	flag.Bool(flagLoginVersion, false, "Display the version information and exit")
 	flag.Bool(flagLoginVerbose, false, "Use verbose output")
 }
@@ -74,7 +73,7 @@ func checkLoginConfig(v *viper.Viper) error {
 	if _, ok := browserToPath[browser]; !ok {
 		return fmt.Errorf("Given browser %q is not an option\n", browser)
 	}
-	sessionDirectory := v.GetString(flagSessionDirectory)
+	sessionDirectory := v.GetString(flagLoginSessionDirectory)
 	if sessionDirectory == HOMEDIR {
 		homedir, errUserHomeDir := os.UserHomeDir()
 		if errUserHomeDir != nil {
@@ -85,7 +84,7 @@ func checkLoginConfig(v *viper.Viper) error {
 	if _, err := os.Stat(sessionDirectory); os.IsNotExist(err) {
 		return fmt.Errorf("The session directory %q does not exist\n", sessionDirectory)
 	}
-	sessionFilename := v.GetString(flagSessionFilename)
+	sessionFilename := v.GetString(flagLoginSessionFilename)
 	if len(sessionFilename) == 0 {
 		return errors.New("The session filename should not be empty")
 	}
@@ -166,8 +165,8 @@ func login(cmd *cobra.Command, args []string) error {
 	browserPath := browserToPath[browser]
 	sectionName := v.GetString(flagLoginSectionName)
 	fieldTitle := v.GetString(flagLoginFieldTitle)
-	sessionDirectory := v.GetString(flagSessionDirectory)
-	sessionFilename := v.GetString(flagSessionFilename)
+	sessionDirectory := v.GetString(flagLoginSessionDirectory)
+	sessionFilename := v.GetString(flagLoginSessionFilename)
 	verbose := v.GetBool(flagLoginVerbose)
 
 	// Get the session path for using 1Password
