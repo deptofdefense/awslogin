@@ -276,7 +276,7 @@ func chooseAccountAlias(config *op.Config, sectionName, fieldTitle string, filte
 		for _, item := range items {
 			for _, f := range filters {
 				title := item.Overview.Title
-				if strings.Contains(title, f) {
+				if len(f) > 0 && strings.Contains(title, f) {
 					newItemList = append(newItemList, item)
 				}
 			}
