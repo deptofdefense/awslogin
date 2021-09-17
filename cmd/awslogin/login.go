@@ -153,9 +153,12 @@ func login(cmd *cobra.Command, args []string) error {
 	var filters []string
 	if len(args) > 0 {
 		// When using filters the AWS_PROFILE should be added to the list
-		filters = append(args, accountAlias)
-		// The accountAlias is set to an empty string to ensure that the filters are used
-		accountAlias = ""
+		filters = args
+		if len(accountAlias) > 0 {
+			filters = append(filters, accountAlias)
+			// The accountAlias is set to an empty string to ensure that the filters are used
+			accountAlias = ""
+		}
 	}
 
 	// Handle Flags
