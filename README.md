@@ -84,6 +84,21 @@ The browser to use can also be changed if desired:
 go run github.com/deptofdefense/awslogin/cmd/awslogin alias-example --browser firefox
 ```
 
+### Environment Variables
+
+It's possible to set environment variables globally in your environment to change the behavior of the tool. Here is a list
+of the available env vars:
+
+| Env Var | Default | Choices | Description |
+| --- | --- | --- | --- |
+| AWSLOGIN_BROWSER | `chrome` | `chrome`, `chrome-canary`, `safari`, `firefox` | The browser to open the Login URL |
+| AWSLOGIN_FIELD_TITLE | `ACCOUNT_ALIAS` | N/A | The 1Password section name used to identify AWS Account Info |
+| AWSLOGIN_SECTION_NAME | `ACCOUNT_INFO` | N/A | The 1Password field title used to identify AWS Account Alias |
+| AWSLOGIN_SESSION_DIRECTORY | `$HOME` | N/A | The path of the directory to hold the session information |
+| AWSLOGIN_SESSION_FILENAME | `.op_session` | N/A | The name of the file to retain session information |
+| AWSLOGIN_VERBOSE | false | Boolean | Use verbose output |
+| AWSLOGIN_VERSION | false | Boolean | Display the version information and exit |
+
 ### AWS Profile Env Var
 
 In the case where you are using a system to manage environment variables (like [direnv](https://direnv.net)) you may
