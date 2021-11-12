@@ -5,7 +5,7 @@ go 1.17
 require (
 	github.com/99designs/aws-vault/v6 v6.3.1
 	github.com/99designs/keyring v1.1.6
-	github.com/aws/aws-sdk-go v1.40.34
+	github.com/aws/aws-sdk-go v1.42.3
 	github.com/goreleaser/goreleaser v0.179.0
 	github.com/spf13/cobra v1.2.1
 	github.com/spf13/pflag v1.0.5
