@@ -2,3 +2,4 @@ bin/
 dist/
 coverage.out
 .envrc.local
+.git/

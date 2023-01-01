@@ -108,3 +108,4 @@ program will automatically add the value of `AWS_PROFILE` to your set of filters
 To understand more clearly how the program chooses what to do here is a flow diagram:
 
 ![Login Flow Diagram](./images/login_flow.png)
+test
